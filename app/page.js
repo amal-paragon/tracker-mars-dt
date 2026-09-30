@@ -129,34 +129,6 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="card">
-          <p className="section-title">Status &amp; Dokumen</p>
-          <div className="field">
-            <label>Status Invoice</label>
-            <select value={form.statusInvoice} onChange={(e) => update("statusInvoice", e.target.value)}>
-              {STATUS_INVOICE_LIST.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label>Link Bukti Pekerjaan</label>
-            <input value={form.linkBukti} onChange={(e) => update("linkBukti", e.target.value)} placeholder="https://..." />
-          </div>
-          <div className="row2">
-            <div className="field">
-              <label>Tanggal Payment (Exp)</label>
-              <input value={form.tanggalPayment} onChange={(e) => update("tanggalPayment", e.target.value)} placeholder="dd-mm-yyyy" />
-            </div>
-            <div className="field">
-              <label>No Invoice/PO</label>
-              <input value={form.noInvoice} onChange={(e) => update("noInvoice", e.target.value)} />
-            </div>
-          </div>
-          <div className="field">
-            <label>Status Payment</label>
-            <input value={form.statusPayment} onChange={(e) => update("statusPayment", e.target.value)} placeholder="mis. Jadwal Transfer 26-06-2026" />
-          </div>
-        </div>
-
         <button className="submit-btn" type="submit" disabled={status === "loading"}>
           {status === "loading" ? "Mengirim..." : "Kirim ke Sheet"}
         </button>
