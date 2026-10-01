@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const CATEGORY_LIST = ["Personal Care", "Face Care", "Advanced Face Care", "Lifestyle"];
+const CATEGORY_LIST = ["Personal Care", "Face Care", "Advanced Face Care", "Lifestyle", "All Category"];
 const BULAN_LIST = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember",
