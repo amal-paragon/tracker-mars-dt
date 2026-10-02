@@ -43,7 +43,6 @@ export default function Page() {
   const [errorMsg, setErrorMsg] = useState("");
   const [budgets, setBudgets] = useState([]);
   const [budgetsStatus, setBudgetsStatus] = useState("loading"); // loading | ready | error
-  const [marsManualMode, setMarsManualMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,21 +142,9 @@ export default function Page() {
             </div>
           </div>
           <div className="field">
-            <div className="mars-label-row">
-              <label>Kode MARS/PM</label>
-              <button
-                type="button"
-                className="link-btn"
-                onClick={() => {
-                  setMarsManualMode((m) => !m);
-                  update("marsPM", "");
-                }}
-              >
-                {marsManualMode ? "Pilih dari list" : "Kode baru? Ketik manual"}
-              </button>
-            </div>
+            <label>Kode MARS/PM</label>
 
-            {marsManualMode || budgetsStatus === "error" ? (
+            {budgetsStatus === "error" ? (
               <input
                 value={form.marsPM}
                 onChange={(e) => update("marsPM", e.target.value)}
