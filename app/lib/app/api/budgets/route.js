@@ -1,37 +1,55 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient, getSheetId } from "../../../lib/googleSheets";
 
-// Kolom di tab "Budget Summary" (sesuai sheet asli):
-// A=No, B=Title, C=Bulan, D=Tahun, E=MARS/PM, F=Budget, G=Total Used, H=Saldo
+// Kolom di sheet "Project Tracker" HARUS urut seperti ini (A sampai O):
+// Admin PIC | Nama User | Nama Vendor | Nama Project | Category | Status Invoice |
+// Nominal | Tax | MARS/PM | Bulan | Tahun | Link Bukti Pekerjaan |
+// Tanggal Payment (Exp) | Status Payment | No Invoice/PO
 
-export async function GET() {
+export async function POST(req) {
   try {
+    const body = await req.json();
+
+    const required = ["adminPIC", "namaUser", "namaVendor", "namaProject", "nominal", "marsPM", "bulan", "tahun"];
+    for (const field of required) {
+      if (!body[field] && body[field] !== 0) {
+        return NextResponse.json({ error: `Field ${field} wajib diisi` }, { status: 400 });
+      }
+    }
+
+    const tabName = process.env.GOOGLE_SHEET_TAB || "Project Tracker";
     const sheetId = getSheetId();
-    const budgetTab = process.env.GOOGLE_BUDGET_TAB || "Budget Summary";
     const sheets = getSheetsClient();
 
-    const res = await sheets.spreadsheets.values.get({
+    const row = [
+      body.adminPIC,
+      body.namaUser,
+      body.namaVendor,
+      body.namaProject,
+      body.category || "",
+      body.statusInvoice || "",
+      Number(body.nominal) || 0,
+      body.tax || "",
+      body.marsPM,
+      body.bulan,
+      Number(body.tahun) || "",
+      body.linkBukti || "",
+      body.tanggalPayment || "",
+      body.statusPayment || "",
+      body.noInvoice || "",
+    ];
+
+    await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: `'${budgetTab}'!B2:H`,
+      range: `'${tabName}'!A:O`,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values: [row] },
     });
 
-    const rows = res.data.values || [];
-
-    const budgets = rows
-      .filter((r) => r[3] /* kode MARS/PM wajib ada */)
-      .map((r) => ({
-        title: r[0] || "",
-        bulan: r[1] || "",
-        tahun: r[2] || "",
-        mars: r[3] || "",
-        budget: Number(String(r[4] || "0").replace(/[^0-9.-]/g, "")) || 0,
-        totalUsed: Number(String(r[5] || "0").replace(/[^0-9.-]/g, "")) || 0,
-        saldo: Number(String(r[6] || "0").replace(/[^0-9.-]/g, "")) || 0,
-      }));
-
-    return NextResponse.json({ budgets });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: err.message || "Gagal ambil data budget" }, { status: 500 });
+    return NextResponse.json({ error: err.message || "Terjadi kesalahan" }, { status: 500 });
   }
 }
