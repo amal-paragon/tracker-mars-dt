@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+
+function formatRupiah(n) {
+  const num = Number(n) || 0;
+  return "Rp" + num.toLocaleString("id-ID");
+}
 
 const CATEGORY_LIST = ["Personal Care", "Face Care", "Advanced Face Care", "Lifestyle", "All Category"];
 const BULAN_LIST = [
@@ -36,6 +41,32 @@ export default function Page() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [errorMsg, setErrorMsg] = useState("");
+  const [budgets, setBudgets] = useState([]);
+  const [budgetsStatus, setBudgetsStatus] = useState("loading"); // loading | ready | error
+  const [marsManualMode, setMarsManualMode] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/budgets")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) throw new Error(data.error);
+        setBudgets(data.budgets || []);
+        setBudgetsStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setBudgetsStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedBudget = useMemo(
+    () => budgets.find((b) => b.mars === form.marsPM),
+    [budgets, form.marsPM]
+  );
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -112,8 +143,53 @@ export default function Page() {
             </div>
           </div>
           <div className="field">
-            <label>Kode MARS/PM</label>
-            <input value={form.marsPM} onChange={(e) => update("marsPM", e.target.value)} placeholder="M0226017042" required />
+            <div className="mars-label-row">
+              <label>Kode MARS/PM</label>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => {
+                  setMarsManualMode((m) => !m);
+                  update("marsPM", "");
+                }}
+              >
+                {marsManualMode ? "Pilih dari list" : "Kode baru? Ketik manual"}
+              </button>
+            </div>
+
+            {marsManualMode || budgetsStatus === "error" ? (
+              <input
+                value={form.marsPM}
+                onChange={(e) => update("marsPM", e.target.value)}
+                placeholder="M0226017042"
+                required
+              />
+            ) : (
+              <select
+                value={form.marsPM}
+                onChange={(e) => update("marsPM", e.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  {budgetsStatus === "loading" ? "Memuat daftar budget..." : "Pilih kode MARS/PM"}
+                </option>
+                {budgets.map((b) => (
+                  <option key={b.mars} value={b.mars}>
+                    {b.mars} — {b.title} (Sisa: {formatRupiah(b.saldo)})
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {selectedBudget && (
+              <div className="budget-hint">
+                <span>Budget: {formatRupiah(selectedBudget.budget)}</span>
+                <span>Terpakai: {formatRupiah(selectedBudget.totalUsed)}</span>
+                <span className={selectedBudget.saldo < 0 ? "budget-neg" : "budget-pos"}>
+                  Sisa: {formatRupiah(selectedBudget.saldo)}
+                </span>
+              </div>
+            )}
           </div>
           <div className="row2">
             <div className="field">
