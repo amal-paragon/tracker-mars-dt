@@ -142,7 +142,7 @@ export default function Page() {
             </div>
           </div>
           <div className="field">
-            <label>Kode MARS/PM</label>
+            <label>Kode MARS</label>
 
             {budgetsStatus === "error" ? (
               <input
@@ -158,7 +158,7 @@ export default function Page() {
                 required
               >
                 <option value="" disabled>
-                  {budgetsStatus === "loading" ? "Memuat daftar budget..." : "Pilih kode MARS/PM"}
+                  {budgetsStatus === "loading" ? "Memuat daftar budget..." : "Pilih kode MARS"}
                 </option>
                 {budgets.map((b) => (
                   <option key={b.mars} value={b.mars}>
