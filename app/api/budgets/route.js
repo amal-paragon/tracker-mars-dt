@@ -17,9 +17,15 @@ export async function GET() {
 
     const rows = res.data.values || [];
 
-    const budgets = rows
-      .filter((r) => r[3] /* kode MARS/PM wajib ada */)
-      .map((r) => ({
+    // Tabel budget utama ada di baris paling atas Budget Summary, diikuti baris
+    // kosong, baru tabel-tabel rekap lain (per Bulan, per Category per Bulan).
+    // Berhenti baca begitu ketemu baris pertama yang kolom Title-nya kosong,
+    // biar tabel rekap di bawahnya gak ikut kebaca jadi "budget" palsu.
+    const budgets = [];
+    for (const r of rows) {
+      if (!r[0]) break; // baris kosong = akhir tabel budget utama
+      if (!r[3]) continue; // lewati baris tanpa kode MARS/PM
+      budgets.push({
         title: r[0] || "",
         bulan: r[1] || "",
         tahun: r[2] || "",
@@ -27,7 +33,8 @@ export async function GET() {
         budget: Number(String(r[4] || "0").replace(/[^0-9.-]/g, "")) || 0,
         totalUsed: Number(String(r[5] || "0").replace(/[^0-9.-]/g, "")) || 0,
         saldo: Number(String(r[6] || "0").replace(/[^0-9.-]/g, "")) || 0,
-      }));
+      });
+    }
 
     return NextResponse.json({ budgets });
   } catch (err) {
